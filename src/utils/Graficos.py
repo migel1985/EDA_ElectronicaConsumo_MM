@@ -9,43 +9,51 @@ import itertools # type: ignore
 class Graficos:
 
     def hipotesis1(self, pDataSet):
-        print("paso por hipotesis1")
-        hipoGraph = Graficos()
+        #preparamos los data frames de precios de artículos, limpiamos los datos para que no tome en cuenta productos con precios Nulos o productos con precio 0.
         dataSetHpy1a = pDataSet[pDataSet['Unit Price'].notna() & (pDataSet['Unit Price'] > 0)]
         dataSetHpy1a = dataSetHpy1a.groupby(['SKU'], as_index=False)['Unit Price'].max()
         dataSetHpy1a = dataSetHpy1a.sort_values(by='Unit Price', ascending=False)
         dataSetHpy1b = pDataSet[pDataSet['Unit Price'].notna() & (pDataSet['Unit Price'] > 0)]
         dataSetHpy1b = dataSetHpy1b.groupby(['SKU'], as_index=False)['Rating'].mean()
         dataSetHpy1b = dataSetHpy1b.sort_values(by='Rating', ascending=False)
+        # Mergeamos los dataframes para así meterlos en el código del gráfico de barras / lineas, con inner aseguramos que nos quedamos con los datos de ambos dataframes que tienen rating y precio.
         dataSetHpy1 = pd.merge(
             dataSetHpy1a[['SKU', 'Unit Price']], 
             dataSetHpy1b[['SKU', 'Rating']], 
             on='SKU', 
             how='inner'
         )
+        # Ordenamos por precio, es más significativo que la evolución del Rating respecto a los precios.
         dataSetHpy1 = dataSetHpy1.sort_values(by='Unit Price', ascending=False)
         fig, ax1 = plt.subplots(figsize=(10,6))
-        ax2 = ax1.twinx()
+        ax2 = ax1.twinx() # Creamos el segundo eje (vertical) para el Rating, es decir, ax1 --> Izquierda precio, ax2 --> Derecha Rating.
         ax1.bar(dataSetHpy1['SKU'], dataSetHpy1['Unit Price'], color='lightblue', label='Precio (€)')
         ax2.plot(dataSetHpy1['SKU'], dataSetHpy1['Rating'], color='darkred', marker='o', label='Rating')
+        #ponemos los labels de eje X y ejes Y's
         ax1.set_xlabel('SKU')
         ax1.set_ylabel('Precio (€)')
         ax2.set_ylabel('Rating', color='darkred')
         plt.title("Precio vs Valoración media por producto")
         plt.xticks(rotation=45)
+        # Hago que los elementos del gráfico queden bien distribuidos y visibles
         plt.tight_layout()
-        #plt.show()
         fig.savefig("src/data/images/hipotesis1.png")
 
 
     def hipotesis2(self, pDataSet):
+        # Me copio el dataset inicial a uno local para poder toquetearlo sin modificar el primero. Es verdad que se pasa como parámetro y no se devuelve así que los
+        # lo que hagamos aquí no tendrá efecto en el origen, pero por salvarme en salud lo he decidido así.
         dataSetHpy2 = pDataSet.copy()
+        # Esto lo he descubierto con Ayuda de IA. La forma de subdividir las edades por rangos de edad, que se van a usar más adelante.
         bins = [0, 29, 59, 120]
         labels = ['Joven', 'Adulto', 'Mayor']
+        # Con cut de pandas, dividimos los datos de la Edad en una agrupación de "Grupo de edad", los bins y labels tienen que ser los mismos.
+        # El parámetro right=True indica que el límite superior del intervalo está incluido (por ejemplo, 29 entra en “Joven”).
         dataSetHpy2['AgeGroup'] = pd.cut(dataSetHpy2['Age'], bins=bins, labels=labels, right=True)
         dataSetHpy2 = dataSetHpy2.sort_values(by='AgeGroup', ascending=False)
-        bins = [0, 5, 10, 20, 50, 100, 500]  # rangos de precio
+        # Creamos el lienzo
         fig, ax = plt.subplots()
+        # creamos el histograma
         sns.histplot(
             data=dataSetHpy2,
             x='Unit Price',
