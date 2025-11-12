@@ -54,7 +54,7 @@ class Graficos:
         # Creamos el lienzo
         fig, ax = plt.subplots()
         # creamos el histograma
-        binsprecios = [0, 50, 500, 1500]  # rangos de precio
+        binsprecios = [0, 50, 500, 1500]  # rangos de precio para agrupar los valores en el Eje X. Tres grupos de precios: 0 - 50, 51-500, 501 - 1500
         sns.histplot(
             data=dataSetHpy2,
             x='Unit Price',
@@ -69,21 +69,27 @@ class Graficos:
         fig.savefig("src/data/images/hipotesis2.png", bbox_inches='tight')
 
     def hipotesis3(self, pDataSet):
+        # Nos quedamos con los datos de los registros que han sido completados, no nos interesa el resto
         dataSetHpy3 = pDataSet.loc[pDataSet["Order Status"] == "Completed"]
         dataSetHpy3 = pDataSet[pDataSet['Total Price'].notna() & pDataSet['Purchase Date'].notna()]
+        # Queremos mostrar la gráfica por evolución temporal, así que preparo el mes y año
         dataSetHpy3['Purchase Date'] = pd.to_datetime(dataSetHpy3['Purchase Date'])
         dataSetHpy3['Month'] = dataSetHpy3['Purchase Date'].dt.to_period('M').astype(str)
+        # Agrupamos por mes / año y hacemos la suma del precio total para ver la venta total. Se entiende que los pedidos son uniproducto multicantidad pedida
         sales_by_month = (
             dataSetHpy3
             .groupby(['Month', 'Loyalty Member'], as_index=False)['Total Price']
             .sum()
             .sort_values('Month')
         )
+        # Dividimos el df en ventas de clientes fidelizados y clientes no fidelizados.
         hp3ComprasFieles = sales_by_month[sales_by_month["Loyalty Member"] == "Yes"][["Month", "Total Price"]]
         hp3ComprasNoFieles = sales_by_month[sales_by_month["Loyalty Member"] == "No"][["Month", "Total Price"]]
         hp3ComprasFieles['tipo'] = 'Fidelizados'
         hp3ComprasNoFieles['tipo'] = 'No fidelizados'
+        # Concatenamos las dos tablas porque queremos meses de ambos que no estén en el contrario, por eso no hacemos un inner por ejemplo.
         df_total = pd.concat([hp3ComprasFieles, hp3ComprasNoFieles])
+        #Creamos el pivote para reorganizar los datos y que el gráfico de areas lo entienda mejor y lo calce
         df_pivot = df_total.pivot_table(
             index='Month',
             columns='tipo',
@@ -102,6 +108,7 @@ class Graficos:
         fig.savefig("src/data/images/hipotesis3.png", bbox_inches='tight')
 
     def hipotesis4(self, pDataSet):
+        # Nos quedamos con los datos de los carritos abandonados.
         abandonedHy4 = pDataSet[pDataSet['Order Status'] == "Abandoned cart"].copy()
         abandonedHy4['Purchase Date'] = pd.to_datetime(abandonedHy4['Purchase Date'])
         abandonedHy4['Month'] = abandonedHy4['Purchase Date'].dt.to_period('M').astype(str)
@@ -129,7 +136,6 @@ class Graficos:
         plt.legend(title='Tipo de cliente')
         plt.tight_layout()
         plt.savefig("src/data/images/hipotesis4.png", bbox_inches='tight')
-
         
     def hipotesis5(self, pDataSet):
         fidelizadosHyp5 = pDataSet[pDataSet['Loyalty Member'] == 'Yes'].copy()
