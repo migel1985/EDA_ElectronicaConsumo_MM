@@ -215,3 +215,16 @@ class Graficos:
         plt.legend(title='Tipo de envío', bbox_to_anchor=(1.05, 1), loc='upper left')
         plt.tight_layout()
         plt.savefig("src/data/images/hipotesis7.png", bbox_inches='tight')
+
+    def hipotesis8(self, pDataSet):
+        datasetHyp8 = pDataSet.copy()
+        bins = [0, 29, 59, 120]
+        labels = ['Joven', 'Adulto', 'Mayor']
+        datasetHyp8['AgeGroup'] = pd.cut(datasetHyp8['Age'], bins=bins, labels=labels, right=True)
+        
+        plt.figure(figsize=(12,6))
+        sns.countplot(data=datasetHyp8, x='AgeGroup', hue='Payment Method')
+        plt.title("Forma de pago según grupo de edad")
+        plt.xlabel("Grupo de edad")
+        plt.ylabel("Número de clientes")
+        plt.savefig("src/data/images/hipotesis8.png", bbox_inches='tight')

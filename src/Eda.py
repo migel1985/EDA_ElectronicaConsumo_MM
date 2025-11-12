@@ -20,8 +20,7 @@ class Eda:
         self.graficohp1.hipotesis5(self.dataSet1)
         self.graficohp1.hipotesis6(self.dataSet1)
         self.graficohp1.hipotesis7(self.dataSet1)
+        self.graficohp1.hipotesis8(self.dataSet1)
 
-
-        pass
 
     
