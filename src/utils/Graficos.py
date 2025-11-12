@@ -54,12 +54,13 @@ class Graficos:
         # Creamos el lienzo
         fig, ax = plt.subplots()
         # creamos el histograma
+        binsprecios = [0, 50, 500, 1500]  # rangos de precio
         sns.histplot(
             data=dataSetHpy2,
             x='Unit Price',
             hue='AgeGroup',
-            bins=bins,
             multiple='dodge',
+            bins=binsprecios,
             palette='coolwarm',
             edgecolor='black',
             ax = ax
