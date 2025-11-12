@@ -110,6 +110,7 @@ class Graficos:
     def hipotesis4(self, pDataSet):
         # Nos quedamos con los datos de los carritos abandonados.
         abandonedHy4 = pDataSet[pDataSet['Order Status'] == "Abandoned cart"].copy()
+        # Convertimos como en otros gráficos la fecha en rango de meses y agrupamos los datos por mes.
         abandonedHy4['Purchase Date'] = pd.to_datetime(abandonedHy4['Purchase Date'])
         abandonedHy4['Month'] = abandonedHy4['Purchase Date'].dt.to_period('M').astype(str)
         abandonedHy4['tipo'] = abandonedHy4['Loyalty Member'].map({'Yes':'Fidelizados', 'No':'No fidelizados'})
@@ -119,6 +120,7 @@ class Graficos:
             .reset_index(name='Abandoned Count')
             .sort_values('Month')
         )
+        # generamos figura de gráfico y lo pintamos.
         plt.figure(figsize=(12,6))
         sns.lineplot(
             data=abandoned_by_month,
@@ -138,7 +140,9 @@ class Graficos:
         plt.savefig("src/data/images/hipotesis4.png", bbox_inches='tight')
         
     def hipotesis5(self, pDataSet):
+        # Nos quedamos con la información de los clientes fidelizados.
         fidelizadosHyp5 = pDataSet[pDataSet['Loyalty Member'] == 'Yes'].copy()
+        # agrupamos los datos por mes - año y agrupamos los datos de los pedidos completados y cancelados para analizar su evolución.
         fidelizadosHyp5['Purchase Date'] = pd.to_datetime(fidelizadosHyp5['Purchase Date'])
         fidelizadosHyp5['Month'] = fidelizadosHyp5['Purchase Date'].dt.to_period('M').astype(str)
         fidelizados_status = fidelizadosHyp5[fidelizadosHyp5['Order Status'].isin(['Completed', 'Cancelled'])]
@@ -147,6 +151,7 @@ class Graficos:
             .size()
             .reset_index(name='Count')
         )
+        # Creamos gráfico de lineas con la evolución de cancelaciones y completados.
         plt.figure(figsize=(12,6))
         sns.lineplot(
             data=pedidos_por_mes,
@@ -166,6 +171,7 @@ class Graficos:
         plt.savefig("src/data/images/hipotesis5.png", bbox_inches='tight')
 
     def hipotesis6(self, pDataSet):
+        # Convertimos la fecha en mes / año
         pDataSet['Purchase Date'] = pd.to_datetime(pDataSet['Purchase Date'])
         pDataSet['Month'] = pDataSet['Purchase Date'].dt.to_period('M').astype(str)
         estados = ['Completed', 'Cancelled', 'Abandoned cart']
@@ -180,6 +186,7 @@ class Graficos:
         pedidos_por_mes = full_index.merge(pedidos_por_mes, on=['Month','Order Status'], how='left')
         pedidos_por_mes['Count'] = pedidos_por_mes['Count'].fillna(0)
         pedidos_pivot = pedidos_por_mes.pivot(index='Month', columns='Order Status', values='Count').fillna(0)
+        # Calculamos el % de los pedidos Cancelados y Abandonados
         pedidos_pivot['Abandon_Rate'] = (pedidos_pivot['Cancelled'] + pedidos_pivot['Abandoned cart']) / (
             pedidos_pivot['Completed'] + pedidos_pivot['Cancelled'] + pedidos_pivot['Abandoned cart']
         )
@@ -204,9 +211,11 @@ class Graficos:
         plt.savefig("src/data/images/hipotesis6.png", bbox_inches='tight')
 
     def hipotesis7(self, pDataSet):
+        # Como en los últimos gráficos saco los meses / años
         pDataSet['Purchase Date'] = pd.to_datetime(pDataSet['Purchase Date'])
         pDataSet['Month'] = pDataSet['Purchase Date'].dt.to_period('M').astype(str)
         filtered_df = pDataSet[pDataSet['Shipping Type'].isin(['Express', 'Standard', 'Same Day'])].copy()
+        # me traigo los datos de los tipos de envíos Express, Standard, y Same Day
         orders_by_month = (
             filtered_df.groupby(['Month','Shipping Type'])
             .size()
@@ -214,6 +223,7 @@ class Graficos:
             .sort_values('Month')
         )
         plt.figure(figsize=(12,6))
+        # generamos el gráfico
         sns.lineplot(
             data=orders_by_month,
             x='Month',
@@ -232,11 +242,12 @@ class Graficos:
         plt.savefig("src/data/images/hipotesis7.png", bbox_inches='tight')
 
     def hipotesis8(self, pDataSet):
+        # Por grupo de edad 
         datasetHyp8 = pDataSet.copy()
         bins = [0, 29, 59, 120]
         labels = ['Joven', 'Adulto', 'Mayor']
         datasetHyp8['AgeGroup'] = pd.cut(datasetHyp8['Age'], bins=bins, labels=labels, right=True)
-        
+        # Sacamos el gráfico con los métodos de pago agrupados por rango de edad
         plt.figure(figsize=(12,6))
         sns.countplot(data=datasetHyp8, x='AgeGroup', hue='Payment Method')
         plt.title("Forma de pago según grupo de edad")
